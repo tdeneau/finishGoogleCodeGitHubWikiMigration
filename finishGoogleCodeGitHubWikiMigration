@@ -10,6 +10,11 @@
 
 # validate input
 if [[ ( $# -eq 1 ) && ( "$1" =~ ^git@github.com:([^/]+)/(.+).git ) ]]; then
+	echo git@ format
+	user="${BASH_REMATCH[1]}"
+	repo="${BASH_REMATCH[2]}"
+elif [[ ( $# -eq 1 ) && ( "$1" =~ ^https://github.com/([^/]+)/(.+).git ) ]]; then
+	echo https: format
 	user="${BASH_REMATCH[1]}"
 	repo="${BASH_REMATCH[2]}"
 else
@@ -33,7 +38,8 @@ else
 	exit 1
 fi
 echo -n "Cloning '${user}/${repo}.wiki'... "
-if git clone -q "git@github.com:${user}/${repo}.wiki.git"; then
+# if git clone -q "git@github.com:${user}/${repo}.wiki.git"; then
+if git clone -q "https://github.com/${user}/${repo}.wiki.git"; then
 	echo "Done."
 else
 	echo "Error!"
@@ -50,7 +56,7 @@ if [[ ! -e "${repo}/README.md" ]]; then
 		echo "ProjectHome.md doesn't exist."
 	else
 		cp "ProjectHome.md" "README.md"
-		sed -i "" -E "s/\(([^\)]+).md\)/(wiki\/\1)/g" README.md
+		sed -i -e "s/\(([^\)]+).md\)/(wiki\/\1)/g" README.md
 		git checkout -q master
 		git add README.md
 		git commit -q -m "$0: Moved ProjectHome.md from wiki branch to README.md in master branch."
@@ -69,7 +75,7 @@ rsync -aE *.md ../${repo}.wiki/
 git checkout -q master
 cd ../${repo}.wiki
 mv ProjectHome.md Home.md
-find . -name "*.md" -exec sed -i "" -E "s/\(([^\)]+).md\)/(\1)/g" {} +
+find . -name "*.md" -exec sed -i -e "s/\(([^\)]+).md\)/(\1)/g" {} +
 git add *.md
 git commit -q -m "$0: Moved pages from $repo wiki branch to ${repo}.wiki master branch."
 echo "Done."
